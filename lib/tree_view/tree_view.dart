@@ -252,9 +252,9 @@ mixin _TreeViewState<Data, Tree extends ITreeNode<Data>,
         animation: animation,
         indentation: widget.indentation,
         expansionIndicator: widget.expansionIndicatorBuilder,
-        onToggleExpansion: (item) => _treeViewEventHandler
+        onToggleExpansion: (item) async { await _treeViewEventHandler
             .expansionBehaviourController
-            .toggleExpansion(item),
+            .toggleExpansion(item); },
         onItemTap: widget.onItemTap,
         showRootNode: widget.showRootNode,
       );

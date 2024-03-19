@@ -1,5 +1,6 @@
 import 'package:animated_tree_view/animated_tree_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 class ExpandableNodeItem<Data, Tree extends ITreeNode<Data>>
     extends StatelessWidget {
@@ -10,9 +11,10 @@ class ExpandableNodeItem<Data, Tree extends ITreeNode<Data>>
   final Indentation indentation;
   final ExpansionIndicatorBuilder<Data>? expansionIndicatorBuilder;
   final bool remove;
+  final bool showExpansionIndicatorWhenEmpty;
   final int? index;
   final ValueSetter<Tree>? onItemTap;
-  final ValueSetter<Tree> onToggleExpansion;
+  final AsyncValueSetter<Tree> onToggleExpansion;
   final bool showRootNode;
 
   static Widget insertedNode<Data, Tree extends ITreeNode<Data>>({
@@ -23,7 +25,7 @@ class ExpandableNodeItem<Data, Tree extends ITreeNode<Data>>
     required Animation<double> animation,
     required ExpansionIndicatorBuilder<Data>? expansionIndicator,
     required ValueSetter<Tree>? onItemTap,
-    required ValueSetter<Tree> onToggleExpansion,
+    required AsyncValueSetter<Tree> onToggleExpansion,
     required bool showRootNode,
     required Indentation indentation,
   }) {
@@ -54,7 +56,7 @@ class ExpandableNodeItem<Data, Tree extends ITreeNode<Data>>
     required Animation<double> animation,
     required ExpansionIndicatorBuilder<Data>? expansionIndicator,
     required ValueSetter<Tree>? onItemTap,
-    required ValueSetter<Tree> onToggleExpansion,
+    required AsyncValueSetter<Tree> onToggleExpansion,
     required bool showRootNode,
     required bool isLastChild,
     required Indentation indentation,
@@ -83,6 +85,7 @@ class ExpandableNodeItem<Data, Tree extends ITreeNode<Data>>
     this.index,
     this.remove = false,
     this.expansionIndicatorBuilder,
+    this.showExpansionIndicatorWhenEmpty = true, // @TODO This shall be default false to not break existing behavior and shall be configurable externally.
     this.onItemTap,
     required this.showRootNode,
     required this.indentation,
@@ -96,15 +99,11 @@ class ExpandableNodeItem<Data, Tree extends ITreeNode<Data>>
       child: builder(context, node),
       indentation: indentation,
       minLevelToIndent: showRootNode ? 0 : 1,
-      expansionIndicator: node.childrenAsList.isEmpty
-          ? null
-          : expansionIndicatorBuilder?.call(context, node),
-      onTap: remove
-          ? null
-          : (dynamic item) {
-              onToggleExpansion(item);
-              if (onItemTap != null) onItemTap!(item);
-            },
+      expansionIndicator: node.childrenAsList.isEmpty && !showExpansionIndicatorWhenEmpty ? null : expansionIndicatorBuilder?.call(context, node),
+      onTap: remove ? null : (dynamic item) async {
+        await onToggleExpansion(item);
+        if (onItemTap != null) onItemTap!(item);
+      },
     );
 
     if (index == null || remove) return itemContainer;
